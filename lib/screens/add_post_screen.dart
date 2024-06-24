@@ -26,6 +26,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
   final User? user = FirebaseAuth.instance.currentUser;
   LatLng? _selectedLocation;
   String _locationMessage = "";
+  bool _isPosting = false; // State to prevent multiple postings
 
   Future<void> _getImageFromCamera() async {
     final ImagePicker _picker = ImagePicker();
@@ -79,7 +80,14 @@ class _AddPostScreenState extends State<AddPostScreen> {
   }
 
   Future<void> _postContent() async {
+    if (_isPosting) {
+      // Prevent multiple postings
+      return;
+    }
+
     if (_postTextController.text.isNotEmpty && _image != null) {
+      _isPosting = true; // Set posting state to true
+
       if (_imageUrl == null) {
         _imageUrl = await _uploadImage(_image!);
       }
@@ -96,6 +104,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
                 _selectedLocation!.latitude, _selectedLocation!.longitude)
                 : null,
           });
+
+          // Navigate to HomeScreen after successful posting
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (context) => HomeScreen(),
@@ -108,6 +118,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
               content: Text('Gagal menyimpan postingan. Silakan coba lagi.'),
             ),
           );
+        } finally {
+          _isPosting = false; // Reset posting state
         }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -186,7 +198,8 @@ class _AddPostScreenState extends State<AddPostScreen> {
                             onLocationSelected: (location) {
                               setState(() {
                                 _selectedLocation = location;
-                                _locationMessage = 'Latitude: ${location.latitude}, Longitude: ${location.longitude}';
+                                _locationMessage =
+                                'Latitude: ${location.latitude}, Longitude: ${location.longitude}';
                               });
                             },
                           ),
@@ -217,7 +230,7 @@ class _AddPostScreenState extends State<AddPostScreen> {
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _postContent,
-              child: Text('Posting '),
+              child: Text('Posting'),
             ),
           ],
         ),
