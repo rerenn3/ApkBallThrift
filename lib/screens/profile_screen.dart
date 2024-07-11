@@ -81,7 +81,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Profile picture updated successfully.'),
+              content: Text('Profile picture updated successfullyzz.'),
             ),
           );
         } catch (error) {

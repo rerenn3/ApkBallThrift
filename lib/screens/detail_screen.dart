@@ -152,7 +152,7 @@ class _DetailScreenState extends State<DetailScreen> {
             const SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: _openInMaps,
-              child: const Text('Tampilkan di Peta '),
+              child: const Text('Lihat Lokasi '),
             ),
           ],
         ),
