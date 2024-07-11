@@ -193,10 +193,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     .orderBy('timestamp', descending: true)
                     .snapshots(),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return const Center(child: Text('Terjadi kesalahan.'));
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Terjadi kesalahan.'));
                   } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                     return Center(
                       child: Column(
@@ -216,7 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Filter posts based on search query
                   var filteredPosts = snapshot.data!.docs.where((post) {
                     var data = post.data() as Map<String, dynamic>;
-                    var text = data['text'] as String? ?? '';
+                    var text = data[' text'] as String? ?? '';
                     return searchQuery == null || searchQuery!.isEmpty
                         ? true
                         : text.toLowerCase().contains(searchQuery!);
@@ -363,7 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) =>  AddPostScreen()),
+            MaterialPageRoute(builder: (context) => AddPostScreen()),
           );
         },
         child: const Icon(Icons.add),
