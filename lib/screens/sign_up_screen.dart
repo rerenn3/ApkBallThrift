@@ -1,5 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'home_screen.dart';
 
@@ -103,26 +103,29 @@ class SignUpScreenState extends State<SignUpScreen> {
                     User? user = userCredential.user;
 
                     if (user != null) {
+                      // Kirim email verifikasi
+                      await user.sendEmailVerification();
+
                       // Set displayName
                       await user.updateDisplayName(name);
 
-                      // Save additional user data to Firestore
+                      // Simpan data tambahan pengguna ke Firestore
                       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
                         'name': name,
                         'email': email,
                       });
 
-                      // Navigate to HomeScreen after successful signup
+                      // Navigasi ke HomeScreen setelah pendaftaran berhasil
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
                           builder: (context) => const HomeScreen(),
                         ),
                       );
 
-                      // Show success message
+                      // Tampilkan pesan sukses
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Sign Up Berhasil. Silahkan Login.'),
+                          content: Text('Pendaftaran Berhasil. Silakan cek email untuk verifikasi.'),
                         ),
                       );
                     }
@@ -136,7 +139,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                     } else if (e.code == 'email-already-in-use') {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Email sudah digunakan'),
+                          content: Text('Pendaftaran Berhasil. Silakan cek email untuk verifikasi'),
                         ),
                       );
                     }
@@ -149,7 +152,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                     );
                   }
                 },
-                child: const Text('Sign Up'),
+                child: const Text('Daftar'),
               ),
             ),
           ],

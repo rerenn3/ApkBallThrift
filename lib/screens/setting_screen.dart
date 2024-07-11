@@ -2,8 +2,9 @@ import 'package:fasum/screens/edit_profile_screen.dart';
 import 'package:fasum/screens/sign_in_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'setting_screen.dart';
+import 'package:provider/provider.dart';
 
+import '../main.dart';
 
 class SettingScreen extends StatelessWidget {
   const SettingScreen({Key? key}) : super(key: key);
@@ -36,6 +37,8 @@ class SettingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
@@ -101,6 +104,13 @@ class SettingScreen extends StatelessWidget {
             title: Text('Country'),
             onTap: () {
               // Aksi untuk membuka pengaturan negara
+            },
+          ),
+          SwitchListTile(
+            title: Text('Dark Mode'),
+            value: themeProvider.themeMode == ThemeMode.dark,
+            onChanged: (bool value) {
+              themeProvider.toggleTheme(value);
             },
           ),
           ListTile(

@@ -1,5 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
 import 'sign_up_screen.dart';
 
@@ -14,6 +14,19 @@ class SignInScreenState extends State<SignInScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   String _errorMessage = '';
+
+  Future<void> _resetPassword() async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: _emailController.text);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email pengaturan ulang kata sandi telah dikirim. Mohon periksa email Anda.')),
+      );
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Masukan Email yang Valid')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,6 +133,11 @@ class SignInScreenState extends State<SignInScreen> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 10),
+                TextButton(
+                  onPressed: _resetPassword,
+                  child: const Text('Forgot Password?'),
                 ),
               ],
             ),
