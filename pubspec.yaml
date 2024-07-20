@@ -46,7 +46,6 @@ dependencies:
   location_geocoder: ^1.0.5
   http: ^1.2.1
   geocoding: ^3.0.0
-  image_picker_for_web: ^2.2.0
   flutter_map: ^7.0.1
   latlong2: ^0.9.1
   google_maps_flutter: ^2.0.0
