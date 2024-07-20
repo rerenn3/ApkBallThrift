@@ -1,3 +1,19 @@
+// File: android/build.gradle
+
+buildscript {
+    ext.kotlin_version = '1.9.0' // Perbarui ke versi Kotlin terbaru
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.0.0'  // Perbarui ke versi terbaru yang mendukung compileSdkVersion 34
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.gms:google-services:4.3.10'  // Pastikan versi terbaru
+    }
+}
+
 allprojects {
     repositories {
         google()
@@ -8,11 +24,20 @@ allprojects {
 rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
-subprojects {
     project.evaluationDependsOn(':app')
 }
 
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
+
+// Hapus bagian berikut jika tidak menggunakan `localProperties`
+// def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+// if (flutterVersionCode == null) {
+//     flutterVersionCode = '1'
+// }
+//
+// def flutterVersionName = localProperties.getProperty('flutter.versionName')
+// if (flutterVersionName == null) {
+//     flutterVersionName = '1.0'
+// }
