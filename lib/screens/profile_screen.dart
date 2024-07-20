@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image_picker_for_web/image_picker_for_web.dart';
 import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -16,85 +15,45 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   File? _image;
-  Uint8List? _webImage;
   bool _isLoading = false;
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
 
-    if (kIsWeb) {
-      final pickedFile = await ImagePickerPlugin().pickImage(source: ImageSource.gallery);
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
-      if (pickedFile != null) {
+    if (pickedFile != null) {
+      setState(() {
+        _image = File(pickedFile.path);
+        _isLoading = true;
+      });
+
+      try {
+        final storageRef = FirebaseStorage.instance.ref().child('profile_pics/${FirebaseAuth.instance.currentUser!.uid}.jpg');
+        await storageRef.putFile(_image!);
+        final downloadUrl = await storageRef.getDownloadURL();
+
+        await FirebaseAuth.instance.currentUser!.updatePhotoURL(downloadUrl);
+        await FirebaseAuth.instance.currentUser!.reload();
         setState(() {
-          _webImage = pickedFile.readAsBytes() as Uint8List?;
-          _isLoading = true;
+          _isLoading = false;
         });
 
-        try {
-          final storageRef = FirebaseStorage.instance.ref().child('profile_pics/${FirebaseAuth.instance.currentUser!.uid}.jpg');
-          await storageRef.putData(_webImage!);
-          final downloadUrl = await storageRef.getDownloadURL();
-
-          await FirebaseAuth.instance.currentUser!.updatePhotoURL(downloadUrl);
-          await FirebaseAuth.instance.currentUser!.reload();
-          setState(() {
-            _isLoading = false;
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Profile picture updated successfully.'),
-            ),
-          );
-        } catch (error) {
-          print('Error uploading profile picture: $error');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error uploading profile picture. Please try again later'),
-            ),
-          );
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      }
-    } else {
-      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-      if (pickedFile != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Profile picture updated successfully.'),
+          ),
+        );
+      } catch (error) {
+        print('Error uploading profile picture: $error');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error uploading profile picture. Please try again later.'),
+          ),
+        );
         setState(() {
-          _image = File(pickedFile.path);
-          _isLoading = true;
+          _isLoading = false;
         });
-
-        try {
-          final storageRef = FirebaseStorage.instance.ref().child('profile_pics/${FirebaseAuth.instance.currentUser!.uid}.jpg');
-          await storageRef.putFile(_image!);
-          final downloadUrl = await storageRef.getDownloadURL();
-
-          await FirebaseAuth.instance.currentUser!.updatePhotoURL(downloadUrl);
-          await FirebaseAuth.instance.currentUser!.reload();
-          setState(() {
-            _isLoading = false;
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Profile picture updated successfully.'),
-            ),
-          );
-        } catch (error) {
-          print('Error uploading profile picture: $error');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error uploading profile picture. Please try again later.'),
-            ),
-          );
-          setState(() {
-            _isLoading = false;
-          });
-        }
       }
     }
   }
@@ -126,8 +85,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 radius: 50,
                 backgroundImage: _image != null
                     ? FileImage(_image!)
-                    : _webImage != null
-                    ? MemoryImage(_webImage!)
                     : NetworkImage(user.photoURL ?? 'https://via.placeholder.com/150') as ImageProvider,
                 child: Align(
                   alignment: Alignment.bottomRight,
