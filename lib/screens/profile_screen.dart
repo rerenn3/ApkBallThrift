@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -29,12 +28,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
 
       try {
-        final storageRef = FirebaseStorage.instance.ref().child('profile_pics/${FirebaseAuth.instance.currentUser!.uid}.jpg');
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          throw Exception('No user is signed in.');
+        }
+
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('profile_pics/${user.uid}.jpg');
+
+        // Upload image to Firebase Storage
         await storageRef.putFile(_image!);
         final downloadUrl = await storageRef.getDownloadURL();
 
-        await FirebaseAuth.instance.currentUser!.updatePhotoURL(downloadUrl);
-        await FirebaseAuth.instance.currentUser!.reload();
+        // Update user's photo URL in Firebase Auth
+        await user.updatePhotoURL(downloadUrl);
+        await user.reload();
+        final updatedUser = FirebaseAuth.instance.currentUser;
+
         setState(() {
           _isLoading = false;
         });
@@ -54,33 +65,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         setState(() {
           _isLoading = false;
         });
-        try {
-          final storageRef = FirebaseStorage.instance.ref().child('profile_pics/${FirebaseAuth.instance.currentUser!.uid}.jpg');
-          await storageRef.putFile(_image!);
-          final downloadUrl = await storageRef.getDownloadURL();
-
-          await FirebaseAuth.instance.currentUser!.updatePhotoURL(downloadUrl);
-          await FirebaseAuth.instance.currentUser!.reload();
-          setState(() {
-            _isLoading = false;
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Profile picture updated successfullyzz.'),
-            ),
-          );
-        } catch (error) {
-          print('Error uploading profile picture: $error');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error uploading profile picture. Please try again later.'),
-            ),
-          );
-          setState(() {
-            _isLoading = false;
-          });
-        }
       }
     }
   }
@@ -166,6 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (updatedName != null) {
                   setState(() {
                     // Refresh the display name with the updated name
+                    FirebaseAuth.instance.currentUser?.updateProfile(displayName: updatedName);
                   });
                 }
               },
