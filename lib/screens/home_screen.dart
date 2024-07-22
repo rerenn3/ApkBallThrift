@@ -163,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -214,7 +214,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Filter posts based on search query
                   var filteredPosts = snapshot.data!.docs.where((post) {
                     var data = post.data() as Map<String, dynamic>;
-                    var text = data[' text'] as String? ?? '';
+                    var text = data['text'] as String? ?? '';
                     return searchQuery == null || searchQuery!.isEmpty
                         ? true
                         : text.toLowerCase().contains(searchQuery!);
@@ -223,9 +223,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   return GridView.builder(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                      childAspectRatio: 0.7,
+                      crossAxisSpacing: 8.0, // Reduced spacing
+                      mainAxisSpacing: 8.0,  // Reduced spacing
+                      childAspectRatio: 0.65, // Adjusted aspect ratio for longer cards
                     ),
                     itemCount: filteredPosts.length,
                     itemBuilder: (context, index) {
@@ -274,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               }
                             },
                             child: Card(
-                              margin: const EdgeInsets.all(10.0),
+                              margin: const EdgeInsets.all(4.0), // Reduced margin
                               child: Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Column(
@@ -330,9 +330,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                         },
                                       ),
                                     const SizedBox(height: 8),
-                                    Text(
-                                      text,
-                                      style: const TextStyle(fontSize: 16),
+                                    Expanded(
+                                      child: Text(
+                                        text,
+                                        style: const TextStyle(fontSize: 16),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 3, // Limit text to 3 lines
+                                      ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
