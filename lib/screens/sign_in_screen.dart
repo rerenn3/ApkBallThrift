@@ -111,7 +111,7 @@ class SignInScreenState extends State<SignInScreen> {
                 TextField(
                   controller: _emailController,
                   decoration: InputDecoration(
-                    labelText: 'USER NAME',
+                    labelText: 'EMAIL',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30.0),
                     ),
