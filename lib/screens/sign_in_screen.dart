@@ -4,7 +4,7 @@ import 'home_screen.dart';
 import 'sign_up_screen.dart';
 
 class SignInScreen extends StatefulWidget {
-  const SignInScreen({Key? key});
+  const SignInScreen({Key? key}) : super(key: key);
 
   @override
   SignInScreenState createState() => SignInScreenState();
@@ -23,7 +23,55 @@ class SignInScreenState extends State<SignInScreen> {
       );
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Masukan Email yang Valid')),
+        SnackBar(content: Text('Masukkan email yang valid')),
+      );
+    }
+  }
+
+  Future<void> _signIn() async {
+    setState(() {
+      _errorMessage = '';
+    });
+
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      User? user = userCredential.user;
+
+      if (user != null) {
+        if (user.emailVerified) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Harap verifikasi email Anda terlebih dahulu.')),
+          );
+          FirebaseAuth.instance.signOut(); // Log out the user if email is not verified
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'Password atau email kamu salah, silahkan coba lagi';
+      if (e.code == 'user-not-found') {
+        errorMessage = 'Akun tidak ditemukan. Silakan periksa email Anda.';
+      } else if (e.code == 'wrong-password') {
+        errorMessage = 'Kata sandi salah. Silakan coba lagi.';
+      } else if (e.code == 'invalid-email') {
+        errorMessage = 'Email tidak valid. Silakan periksa email Anda.';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    } catch (error) {
+      print("Error during sign in: $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Terjadi kesalahan saat login. Silakan coba lagi.'),
+        ),
       );
     }
   }
@@ -49,7 +97,7 @@ class SignInScreenState extends State<SignInScreen> {
                 TextField(
                   controller: _emailController,
                   decoration: InputDecoration(
-                    labelText: 'USER NAME',
+                    labelText: 'EMAIL',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30.0),
                     ),
@@ -71,26 +119,7 @@ class SignInScreenState extends State<SignInScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     ElevatedButton(
-                      onPressed: () async {
-                        try {
-                          await FirebaseAuth.instance.signInWithEmailAndPassword(
-                            email: _emailController.text,
-                            password: _passwordController.text,
-                          );
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (context) => const HomeScreen()),
-                          );
-                        } catch (error) {
-                          setState(() {
-                            _errorMessage = error.toString();
-                          });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(_errorMessage),
-                            ),
-                          );
-                        }
-                      },
+                      onPressed: _signIn,
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20.0),

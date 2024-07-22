@@ -32,6 +32,7 @@ class ThemeProvider extends ChangeNotifier {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
@@ -47,14 +48,26 @@ class MyApp extends StatelessWidget {
             ),
             darkTheme: ThemeData.dark(), // Tema gelap
             themeMode: themeProvider.themeMode, // Mengatur tema berdasarkan ThemeProvider
-            home: StreamBuilder(
+            home: StreamBuilder<User?>(
               stream: FirebaseAuth.instance.authStateChanges(),
               builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  return const HomeScreen();
-                } else {
-                  return const SignInScreen();
+                if (snapshot.connectionState == ConnectionState.active) {
+                  User? user = snapshot.data;
+
+                  if (user == null) {
+                    return const SignInScreen();
+                  }
+
+                  if (user.emailVerified) {
+                    return const HomeScreen();
+                  } else {
+                    // Jika email belum terverifikasi, arahkan ke SignInScreen
+                    return const SignInScreen();
+                  }
                 }
+
+                // Tampilkan layar loading atau splash jika koneksi sedang aktif
+                return Center(child: CircularProgressIndicator());
               },
             ),
           );
