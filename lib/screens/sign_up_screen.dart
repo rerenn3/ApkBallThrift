@@ -113,7 +113,7 @@ class SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Thrift Place'),
+        title: const Text('BallThrift'),
         centerTitle: true,
       ),
       body: Padding(

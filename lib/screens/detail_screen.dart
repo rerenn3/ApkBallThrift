@@ -24,21 +24,13 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen> {
   String? address;
-  TextEditingController _descriptionController = TextEditingController();
-  String _editedDescription = ''; // Added to store edited description
-  bool _editingMode = false; // Track whether in editing mode or not
+  String _description = ''; // For storing description from Firestore
 
   @override
   void initState() {
     super.initState();
     _fetchAddress();
-    _descriptionController.text = widget.caption; // Initialize controller with current caption
-  }
-
-  @override
-  void dispose() {
-    _descriptionController.dispose();
-    super.dispose();
+    _fetchDescription(); // Fetch description from Firestore
   }
 
   Future<void> _fetchAddress() async {
@@ -64,27 +56,74 @@ class _DetailScreenState extends State<DetailScreen> {
     }
   }
 
+  Future<void> _fetchDescription() async {
+    try {
+      final doc = await FirebaseFirestore.instance.collection('posts').doc(widget.postId).get();
+      if (doc.exists) {
+        setState(() {
+          _description = doc.data()?['description'] ?? widget.caption;
+        });
+      }
+    } catch (e) {
+      print('Error fetching description: $e');
+    }
+  }
+
+  Future<void> _saveDescription(String description) async {
+    try {
+      await FirebaseFirestore.instance.collection('posts').doc(widget.postId).update({
+        'description': description,
+      });
+      setState(() {
+        _description = description;
+      });
+    } catch (e) {
+      print('Error saving description: $e');
+    }
+  }
+
   void _openInMaps() async {
     final googleMapsUrl = Uri.parse(
         'https://www.google.com/maps/search/?api=1&query=${widget.geoPoint.latitude},${widget.geoPoint.longitude}');
-    try {
+    if (await canLaunch(googleMapsUrl.toString())) {
       await launch(googleMapsUrl.toString());
-    } catch (e) {
+    } else {
       throw 'Could not open $googleMapsUrl';
     }
   }
 
-  void _toggleEditingMode() {
-    setState(() {
-      _editingMode = true; // Enable editing mode
-    });
-  }
-
-  void _saveDescription() {
-    setState(() {
-      _editedDescription = _descriptionController.text; // Update edited description
-      _editingMode = false; // Disable editing mode after saving
-    });
+  void _showEditDescriptionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final controller = TextEditingController(text: _description);
+        return AlertDialog(
+          title: const Text('Edit Deskripsi'),
+          content: TextField(
+            controller: controller,
+            maxLines: null,
+            decoration: const InputDecoration(
+              hintText: 'Tambahkan deskripsi...',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Batal'),
+            ),
+            TextButton(
+              onPressed: () {
+                _saveDescription(controller.text);
+                Navigator.of(context).pop();
+              },
+              child: const Text('Simpan'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -92,55 +131,55 @@ class _DetailScreenState extends State<DetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detail Postingan'),
-        backgroundColor: Colors.lightBlue,
+        backgroundColor: Colors.blueAccent,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Image.network(
-              widget.imageUrl,
-              width: double.infinity,
-              height: 200,
-              fit: BoxFit.cover,
-            ),
-            const SizedBox(height: 16.0),
-            Text(
-              widget.caption,
-              style: const TextStyle(fontSize: 18.0),
-            ),
-            const SizedBox(height: 16.0),
-            if (address != null)
-              Text(
-                'Location: $address',
-                style: const TextStyle(fontSize: 16.0, color: Colors.grey),
-              )
-            else
-              const CircularProgressIndicator(),
-            const SizedBox(height: 16.0),
-            if (_editingMode)
-              TextField(
-                controller: _descriptionController,
-                maxLines: null,
-                decoration: InputDecoration(
-                  hintText: 'Tambahkan deskripsi...',
-                  border: OutlineInputBorder(),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Card(
+                elevation: 5,
+                child: Image.network(
+                  widget.imageUrl,
+                  width: double.infinity,
+                  height: 200,
+                  fit: BoxFit.cover,
                 ),
               ),
-            if (!_editingMode && _editedDescription.isNotEmpty)
-              Text(
-                'Deskripsi: $_editedDescription',
-                style: const TextStyle(fontSize: 16.0, color: Colors.black),
+              const SizedBox(height: 16.0),
+              Card(
+                elevation: 5,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    widget.caption,
+                    style: const TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+                  ),
+                ),
               ),
-            const SizedBox(height: 16.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (!_editingMode && _editedDescription.isEmpty)
-                  ElevatedButton(
-                    onPressed: _toggleEditingMode,
-                    child: Text('Tambah Deskripsi'),
+              const SizedBox(height: 16.0),
+              Card(
+                elevation: 5,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (address != null)
+                        Text(
+                          'Location: $address',
+                          style: const TextStyle(fontSize: 16.0, color: Colors.grey),
+                        )
+                      else
+                        const CircularProgressIndicator(),
+                      const SizedBox(height: 16.0),
+                      Text(
+                        'Deskripsi: $_description',
+                        style: const TextStyle(fontSize: 16.0, color: Colors.black),
+                      ),
+                    ],
                   ),
                 if (_editingMode)
                   ElevatedButton(
@@ -155,7 +194,21 @@ class _DetailScreenState extends State<DetailScreen> {
               child: const Text('Lihat Lokasi '),
             ),
           ],
+                ),
+              ),
+              const SizedBox(height: 16.0),
+              ElevatedButton(
+                onPressed: _openInMaps,
+                child: const Text('Tampilkan di Peta'),
+              ),
+            ],
+          ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showEditDescriptionDialog,
+        child: const Icon(Icons.edit),
+        backgroundColor: Colors.blueAccent,
       ),
     );
   }
